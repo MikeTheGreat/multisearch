@@ -107,6 +107,7 @@ const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
 
 // Update the current slot of searches with the selection (if it exists)
 // or else the word under the cursor, then call searchForwards
+
 const searchForwardsForWordUnderCursor = async (
     textEditor: TextEditor,
     edit: TextEditorEdit,
