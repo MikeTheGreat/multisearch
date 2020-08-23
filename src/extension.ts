@@ -2,6 +2,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { TextEditorEdit, TextEditor, Selection } from "vscode";
+import { resolveCliPathFromVSCodeExecutablePath } from "vscode-test";
+import { isUndefined } from "util";
 
 // import { StartFindAction, NextMatchFindAction } from 'vscode'//    'vs/editor/contrib/find/findController';
 
@@ -11,8 +13,25 @@ import { TextEditorEdit, TextEditor, Selection } from "vscode";
 // Invoking commands:
 // https://code.visualstudio.com/api/references/vscode-api#commands
 
-var searchFor = "";
+let searches: Array<string> = [];
 const out = vscode.window.createOutputChannel("MultiSearch");
+
+interface IPresetCollection {
+    presets: Array<IPreset>;
+}
+
+interface IPreset {
+    name: string;
+    abbrev: string;
+    numQuestions: string;
+    searches: Array<string>;
+}
+
+interface ISearchArgs {
+    acquire: boolean;
+    direction: "forward" | "backward";
+    which: number;
+}
 
 const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
     const config = vscode.workspace.getConfiguration("multisearch");
@@ -26,30 +45,130 @@ const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
         return;
     }
 
-    // TODO: How to detect invalid file path?
-    const textSearchStrings = await vscode.workspace.fs.readFile(
-        vscode.Uri.file(fpSearchStrings)
-    );
+    // Detect an invalid file by trying to open if and catching the error
+    vscode.workspace.fs.readFile(vscode.Uri.file(fpSearchStrings)).then(
+        async (textSearchStrings: Uint8Array) => {
+            out.appendLine(
+                "textSearchStrings: " + textSearchStrings.toString()
+            );
+            const data: IPresetCollection = JSON.parse(
+                textSearchStrings.toString()
+            );
 
-    out.appendLine("textSearchStrings: " + textSearchStrings.toString());
-    const searchStrings = JSON.parse(textSearchStrings.toString());
+            let userInput = await vscode.window.showInputBox({
+                ignoreFocusOut: true,
+                prompt: "What preset would you like to load?",
+                placeHolder:
+                    "Use an abbreviation, like 2-1 for BIT 142's Lesson 1",
+            });
 
-    let userInput = await vscode.window.showInputBox({
-        ignoreFocusOut: true,
-        prompt: "What preset would you like to load?",
-        placeHolder: "Use an abbreviation, like 2-1 for BIT 142's Lesson 1",
-    });
+            out.appendLine(
+                "userInput: " + userInput // multisearch.fileOfSearchStrings
+            );
 
-    out.appendLine(
-        "userInput: " + userInput // multisearch.fileOfSearchStrings
+            if (isUndefined(userInput)) {
+                vscode.window.showInformationMessage(
+                    "Cancelling - no preset supplied"
+                );
+                return;
+            }
+
+            let matches = data.presets.filter(
+                (objPreset: IPreset) =>
+                    objPreset.abbrev.toLowerCase() ===
+                        userInput?.toLowerCase() ||
+                    objPreset.name.toLowerCase() === userInput?.toLowerCase()
+            );
+
+            out.appendLine("Num matches: " + matches.length);
+            if (matches.length === 0) {
+                vscode.window.showInformationMessage(
+                    "Can't find a preset with that name or abbreviation!"
+                );
+                return;
+            }
+            out.appendLine("Matches: " + JSON.stringify(matches, null, 2));
+            out.appendLine("Using this search set: " + matches[0].searches);
+            searches = matches[0].searches;
+        },
+        (reason) => {
+            // reading the file of presets failed
+            vscode.window.showInformationMessage(
+                "Can't read the file " + fpSearchStrings
+            );
+            out.appendLine("Can't read the file " + fpSearchStrings);
+            out.appendLine(
+                "Detailed error message:\n" + JSON.stringify(reason, null, 4)
+            );
+            return;
+        }
     );
 };
 
-const doSearch = async (textEditor: TextEditor, edit: TextEditorEdit) => {
+// Update the current slot of searches with the selection (if it exists)
+// or else the word under the cursor, then call searchForwards
+const searchForwardsForWordUnderCursor = async (
+    textEditor: TextEditor,
+    edit: TextEditorEdit,
+    args: ISearchArgs
+) => {
+    debugger;
+    const editor = vscode.window.activeTextEditor;
+
+    if (editor) {
+        const document = editor.document;
+        const selection = editor.selection;
+        const range_wordAtPoint = document.getWordRangeAtPosition(
+            editor.selection.active
+        );
+        if (!range_wordAtPoint) {
+            vscode.window.showInformationMessage("No word at the cursor");
+            return;
+        }
+        const offset_word_start = document.offsetAt(range_wordAtPoint.start);
+        const offset_word_end = document.offsetAt(range_wordAtPoint.end);
+        const documentText = document.getText();
+        const searchFor = documentText.substring(
+            offset_word_start,
+            offset_word_end
+        );
+
+        const idxWhich = args.which as number;
+        searches[idxWhich] = searchFor;
+        return searchForwards(textEditor, edit, args);
+    } else {
+        vscode.window.showInformationMessage(
+            "This command only works in an editor"
+        );
+        return;
+    }
+};
+
+const searchForwards = async (
+    textEditor: TextEditor,
+    edit: TextEditorEdit,
+    args: ISearchArgs
+) => {
     // The code you place here will be executed every time your command is executed
 
-    // Display a message box to the user
-    //vscode.window.showInformationMessage('Hello World from Multisearch!');
+    if (isUndefined(args) || !("which" in args)) {
+        vscode.window.showInformationMessage(
+            "Bad Keybinding: missing args: {which: 0} to specify which search to run"
+        );
+        return;
+    }
+    out.appendLine("args: " + JSON.stringify(args, null, 4));
+    // Next, make sure we have something at that index:
+    if (!(args["which"] in searches)) {
+        vscode.window.showInformationMessage(
+            "No search term in slot " +
+                args["which"] +
+                " - did you load a preset/search under the cursor?"
+        );
+        return;
+    }
+    const searchFor = searches[args.which];
+    out.appendLine("Searching for: " + searchFor);
 
     const editor = vscode.window.activeTextEditor;
 
@@ -59,24 +178,6 @@ const doSearch = async (textEditor: TextEditor, edit: TextEditorEdit) => {
 
         // Get the word within the selection
         const documentText = document.getText();
-
-        if (searchFor == "") {
-            const range_wordAtPoint = document.getWordRangeAtPosition(
-                editor.selection.active
-            );
-            if (!range_wordAtPoint) {
-                vscode.window.showInformationMessage("No word at the cursor");
-                return;
-            }
-            const offset_word_start = document.offsetAt(
-                range_wordAtPoint.start
-            );
-            const offset_word_end = document.offsetAt(range_wordAtPoint.end);
-            searchFor = documentText.substring(
-                offset_word_start,
-                offset_word_end
-            );
-        }
 
         var word_offset_try = documentText.indexOf(
             searchFor,
@@ -107,7 +208,7 @@ const doSearch = async (textEditor: TextEditor, edit: TextEditorEdit) => {
         );
     }
 
-    // vscode.window.showInformationMessage('END: ');
+    out.appendLine("END OF MULTISEARCH.doSearch");
 };
 
 // this method is called when your extension is activated
@@ -137,7 +238,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     disposable = vscode.commands.registerTextEditorCommand(
         "multisearch.searchForwards",
-        doSearch
+        searchForwards
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.searchForwardsForWordUnderCursor",
+        searchForwardsForWordUnderCursor
     );
     context.subscriptions.push(disposable);
 }

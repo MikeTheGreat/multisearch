@@ -11,7 +11,8 @@
     ],
     "activationEvents": [
         "onCommand:multisearch.loadPresetSearches",
-        "onCommand:multisearch.searchForwards"
+        "onCommand:multisearch.searchForwards",
+        "onCommand:multisearch.searchForwardsForWordUnderCursor"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -27,16 +28,34 @@
                 "title": "Search Forwards",
                 "category": "MultiSearch",
                 "when": "editorFocus"
+            },
+            {
+                "command": "multisearch.searchForwardsForWordUnderCursor",
+                "title": "Search Forwards For Word Under Cursor",
+                "category": "MultiSearch",
+                "when": "editorFocus"
             }
         ],
         "keybindings": [
             {
                 "command": "multisearch.loadPresetSearches",
-                "key": "f3"
+                "key": "Ctrl+f1"
+            },
+            {
+                "command": "multisearch.doSearch",
+                "key": "Ctrl+f3",
+                "args": {
+                    "acquire": true,
+                    "direction": "forwards",
+                    "which": 0
+                }
             },
             {
                 "command": "multisearch.searchForwards",
-                "key": "f4"
+                "key": "f3",
+                "args": {
+                    "which": 0
+                }
             }
         ],
         "configuration": {
