@@ -1,52 +1,74 @@
 {
-	"name": "multisearch",
-	"displayName": "Multisearch",
-	"description": "Extending the 'F3' seach functionality to additional keys (F4, F5, etc)",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.45.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onCommand:multisearch.helloWorld"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "multisearch.helloWorld",
-				"title": "Hello World",
-				"when": "editorFocus"
-			}
-		],
-		"keybindings": [
-			{
-				"command": "multisearch.helloWorld",
-				"key": "f4"
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./",
-		"lint": "eslint src --ext ts",
-		"watch": "tsc -watch -p ./",
-		"pretest": "yarn run compile && yarn run lint",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/vscode": "^1.45.0",
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^7.0.2",
-		"@types/node": "^13.11.0",
-		"eslint": "^6.8.0",
-		"@typescript-eslint/parser": "^2.30.0",
-		"@typescript-eslint/eslint-plugin": "^2.30.0",
-		"glob": "^7.1.6",
-		"mocha": "^7.1.2",
-		"typescript": "^3.8.3",
-		"vscode-test": "^1.3.0"
-	}
+    "name": "multisearch",
+    "displayName": "Multisearch",
+    "description": "Extending the 'F3' seach functionality to additional keys (F4, F5, etc)",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.45.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:multisearch.loadPresetSearches",
+        "onCommand:multisearch.searchForwards"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "multisearch.loadPresetSearches",
+                "title": "Load Preset Searches",
+                "category": "MultiSearch",
+                "when": "editorFocus"
+            },
+            {
+                "command": "multisearch.searchForwards",
+                "title": "Search Forwards",
+                "category": "MultiSearch",
+                "when": "editorFocus"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "multisearch.loadPresetSearches",
+                "key": "f3"
+            },
+            {
+                "command": "multisearch.searchForwards",
+                "key": "f4"
+            }
+        ],
+        "configuration": {
+            "title": "MultiSearch",
+            "properties": {
+                "multisearch.fileOfSearchStrings": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Full path to JSON file containing search strings to preload"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "yarn run compile",
+        "compile": "tsc -p ./",
+        "lint": "eslint src --ext ts",
+        "watch": "tsc -watch -p ./",
+        "pretest": "yarn run compile && yarn run lint",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.45.0",
+        "@types/glob": "^7.1.1",
+        "@types/mocha": "^7.0.2",
+        "@types/node": "^13.11.0",
+        "eslint": "^6.8.0",
+        "@typescript-eslint/parser": "^2.30.0",
+        "@typescript-eslint/eslint-plugin": "^2.30.0",
+        "glob": "^7.1.6",
+        "mocha": "^7.1.2",
+        "typescript": "^3.8.3",
+        "vscode-test": "^1.3.0"
+    }
 }
