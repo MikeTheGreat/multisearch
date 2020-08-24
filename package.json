@@ -11,8 +11,7 @@
     ],
     "activationEvents": [
         "onCommand:multisearch.loadPresetSearches",
-        "onCommand:multisearch.searchForwards",
-        "onCommand:multisearch.searchForwardsForWordUnderCursor"
+        "onCommand:multisearch.doSearch"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -24,14 +23,8 @@
                 "when": "editorFocus"
             },
             {
-                "command": "multisearch.searchForwards",
+                "command": "multisearch.doSearch",
                 "title": "Search Forwards",
-                "category": "MultiSearch",
-                "when": "editorFocus"
-            },
-            {
-                "command": "multisearch.searchForwardsForWordUnderCursor",
-                "title": "Search Forwards For Word Under Cursor",
                 "category": "MultiSearch",
                 "when": "editorFocus"
             }
@@ -43,18 +36,36 @@
             },
             {
                 "command": "multisearch.doSearch",
-                "key": "Ctrl+f3",
+                "key": "f3",
                 "args": {
-                    "acquire": true,
-                    "direction": "forwards",
-                    "which": 0
+                    "which": 0,
+                    "direction": "forward"
                 }
             },
             {
-                "command": "multisearch.searchForwards",
-                "key": "f3",
+                "command": "multisearch.doSearch",
+                "key": "Shift+f3",
                 "args": {
-                    "which": 0
+                    "which": 0,
+                    "direction": "backward"
+                }
+            },
+            {
+                "command": "multisearch.doSearch",
+                "key": "Ctrl+f3",
+                "args": {
+                    "acquire": true,
+                    "which": 0,
+                    "direction": "forward"
+                }
+            },
+            {
+                "command": "multisearch.doSearch",
+                "key": "Ctrl+Shift+f3",
+                "args": {
+                    "acquire": true,
+                    "which": 0,
+                    "direction": "backward"
                 }
             }
         ],
