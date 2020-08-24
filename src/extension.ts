@@ -137,7 +137,15 @@ const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
             }
             // out.appendLine("Matches: " + JSON.stringify(matches, null, 2));
             // out.appendLine("Using this search set: " + matches[0].searches);
-            searches = matches[0].searches;
+            const match: IPreset = matches[0];
+            searches = match.searches;
+
+            let msg = "Loaded " + match.name;
+            if (match.numQuestions)
+                msg += "  *  Quiz questions: " + match.numQuestions;
+            msg += "  * From " + fpSearchStrings;
+
+            vscode.window.showInformationMessage(msg);
 
             console.log("Loaded presets from " + fpSearchStrings);
         },
