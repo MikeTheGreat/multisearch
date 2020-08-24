@@ -2,14 +2,14 @@
     "name": "multisearch",
     "displayName": "Multisearch",
     "description": "Extending the 'F3' seach functionality to additional keys (F4, F5, etc)",
-    "version": "1.0.1",
+    "version": "1.0.4",
     "publisher": "MikePanitz",
     "repository": {
         "url": "https://github.com/MikeTheGreat/multisearch"
     },
     "license": "GPL-3.0-or-later",
     "engines": {
-        "vscode": "^1.45.0"
+        "vscode": "^1.48.0"
     },
     "categories": [
         "Other"
@@ -29,16 +29,12 @@
             },
             {
                 "command": "multisearch.doSearch",
-                "title": "Search Forwards",
+                "title": "Search",
                 "category": "MultiSearch",
                 "when": "editorFocus"
             }
         ],
         "keybindings": [
-            {
-                "command": "multisearch.loadPresetSearches",
-                "key": "Ctrl+f1"
-            },
             {
                 "command": "multisearch.doSearch",
                 "key": "f3",
@@ -94,13 +90,13 @@
         "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
-        "@types/vscode": "^1.45.0",
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.11.0",
-        "eslint": "^6.8.0",
-        "@typescript-eslint/parser": "^2.30.0",
+        "@types/vscode": "^1.48.0",
         "@typescript-eslint/eslint-plugin": "^2.30.0",
+        "@typescript-eslint/parser": "^2.30.0",
+        "eslint": "^6.8.0",
         "glob": "^7.1.6",
         "mocha": "^7.1.2",
         "typescript": "^3.8.3",

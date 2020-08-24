@@ -201,15 +201,27 @@ const doSearch = async (
     // set the current searches slot to be that word
     // then continue on to the rest of the search stuff
     if (args.acquire) {
-        const range_wordAtPoint = document.getWordRangeAtPosition(
-            editor.selection.active
-        );
-        if (!range_wordAtPoint) {
-            vscode.window.showInformationMessage("No word at the cursor");
-            return;
+        // Assume there's an active selection to use:
+        let offset_word_start = document.offsetAt(editor.selection.start);
+        let offset_word_end = document.offsetAt(editor.selection.end);
+
+        // But if there's no selection (point is at the same place as start and end)
+        // then look for a work under the cursor/point
+        if (
+            document.offsetAt(editor.selection.active) === offset_word_start &&
+            document.offsetAt(editor.selection.active) === offset_word_end
+        ) {
+            // otherwise, look for the word under the point/cursor
+            const range_wordAtPoint = document.getWordRangeAtPosition(
+                editor.selection.active
+            );
+            if (!range_wordAtPoint) {
+                vscode.window.showInformationMessage("No word at the cursor");
+                return;
+            }
+            offset_word_start = document.offsetAt(range_wordAtPoint.start);
+            offset_word_end = document.offsetAt(range_wordAtPoint.end);
         }
-        const offset_word_start = document.offsetAt(range_wordAtPoint.start);
-        const offset_word_end = document.offsetAt(range_wordAtPoint.end);
 
         const searchFor = documentText.substring(
             offset_word_start,
