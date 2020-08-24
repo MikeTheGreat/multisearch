@@ -80,7 +80,9 @@ export function activate(context: vscode.ExtensionContext) {
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
+// params (I'm not using them & strict TS is complaining, so I'm removing them)
+// textEditor: TextEditor, edit: TextEditorEdit
+const loadPreset = async () => {
     // out.appendLine("In loadPreset!");
     const config = vscode.workspace.getConfiguration("multisearch");
     const fpSearchStrings: string = config.get("fileOfSearchStrings") ?? "";
@@ -149,7 +151,8 @@ const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
 
             console.log("Loaded presets from " + fpSearchStrings);
         },
-        (reason) => {
+        () => {
+            // removed 'reason' parameter
             // reading the file of presets failed
             vscode.window.showInformationMessage(
                 "Can't read the file " + fpSearchStrings
@@ -165,7 +168,9 @@ const loadPreset = async (textEditor: TextEditor, edit: TextEditorEdit) => {
 };
 
 const doSearch = async (
+    // @ts-ignore
     textEditor: TextEditor,
+    // @ts-ignore
     edit: TextEditorEdit,
     args: ISearchArgs
 ) => {
@@ -260,9 +265,9 @@ const doSearch = async (
     // out.appendLine("Searching for: " + searchFor);
 
     const re = new RegExp(searchFor, "gi");
-    const matches = [...documentText.matchAll(re)];
+    let matches = [...documentText.matchAll(re)];
 
-    if (matches.length === 0) {
+    if (!matches || matches.length === 0) {
         vscode.window.showInformationMessage("Word not found: " + searchFor);
         return;
     }
@@ -275,21 +280,38 @@ const doSearch = async (
     // to refactor them into common code
     // But I think the resulting code will be more complex than just keeping them
     // separate
+    //matches = matches!;
     if (args.direction === "forward") {
-        if (startSearchAt >= 0 && startSearchAt <= matches[0].index)
+        let possibleMatch = matches[0];
+        if (
+            startSearchAt >= 0 &&
+            possibleMatch.index &&
+            startSearchAt <= possibleMatch.index
+        )
             nextMatch = 0;
         else {
             for (let i = 0; i < matches.length - 1; i++) {
+                let possibleMatch = matches[i];
+                let possibleNextMatch = matches[i + 1];
                 if (
-                    startSearchAt >= matches[i].index &&
-                    startSearchAt <= matches[i + 1].index
+                    possibleMatch &&
+                    possibleMatch.index &&
+                    startSearchAt >= possibleMatch.index &&
+                    possibleNextMatch &&
+                    possibleNextMatch.index &&
+                    startSearchAt <= possibleNextMatch.index
                 ) {
                     nextMatch = i + 1;
                     break;
                 }
             }
         }
-        if (startSearchAt >= matches[matches.length - 1].index) {
+        let possibleLastMatch = matches[matches.length - 1];
+        if (
+            possibleLastMatch &&
+            possibleLastMatch.index &&
+            startSearchAt >= possibleLastMatch.index
+        ) {
             nextMatch = 0;
             wrapped = true;
         }
@@ -299,24 +321,35 @@ const doSearch = async (
         whichEnd = "bottom";
         if (
             startSearchAt >= -1 && // -1 b/c we move the cursor back one to look for prev match
+            matches &&
+            matches[0] &&
+            matches[0].index &&
             startSearchAt <= matches[0].index + searchFor.length
         ) {
             nextMatch = matches.length - 1;
             wrapped = true;
         } else {
             for (let i = matches.length - 2; i >= 0; i--) {
+                let possibleMatch = matches[i];
+                let possibleNextMatch = matches[i + 1];
                 if (
-                    startSearchAt >= matches[i].index + searchFor.length &&
-                    startSearchAt <= matches[i + 1].index + +searchFor.length
+                    possibleMatch &&
+                    possibleMatch.index &&
+                    startSearchAt >= possibleMatch.index + searchFor.length &&
+                    possibleNextMatch &&
+                    possibleNextMatch.index &&
+                    startSearchAt <= possibleNextMatch.index + +searchFor.length
                 ) {
                     nextMatch = i;
                     break;
                 }
             }
         }
+        let possibleLastMatch = matches[matches.length - 1];
         if (
-            startSearchAt >=
-            matches[matches.length - 1].index + searchFor.length
+            possibleLastMatch &&
+            possibleLastMatch.index &&
+            startSearchAt >= possibleLastMatch.index + searchFor.length
         ) {
             nextMatch = matches.length - 1;
         }
@@ -327,7 +360,7 @@ const doSearch = async (
             "Wrapped search back to the " + whichEnd + " of file"
         );
 
-    const word_offset = matches[nextMatch].index;
+    const word_offset = matches[nextMatch].index ?? 0;
     const word_pos = document.positionAt(word_offset);
     const word_end_pos = document.positionAt(word_offset + searchFor.length);
 
