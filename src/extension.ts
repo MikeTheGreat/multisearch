@@ -272,96 +272,47 @@ const doSearch = async (
         return;
     }
 
-    let nextMatch = -1;
-    let wrapped = false;
-    let whichEnd: string = "top";
+    debugger;
 
-    // These two cases are _so_similar_ - I feel like we ought to be able
-    // to refactor them into common code
-    // But I think the resulting code will be more complex than just keeping them
-    // separate
-    //matches = matches!;
-    if (args.direction === "forward") {
-        let possibleMatch = matches[0];
-        if (
-            startSearchAt >= 0 &&
-            possibleMatch.index &&
-            startSearchAt <= possibleMatch.index
-        )
-            nextMatch = 0;
-        else {
-            for (let i = 0; i < matches.length - 1; i++) {
-                let possibleMatch = matches[i];
-                let possibleNextMatch = matches[i + 1];
-                if (
-                    possibleMatch &&
-                    possibleMatch.index &&
-                    startSearchAt >= possibleMatch.index &&
-                    possibleNextMatch &&
-                    possibleNextMatch.index &&
-                    startSearchAt <= possibleNextMatch.index
-                ) {
-                    nextMatch = i + 1;
-                    break;
-                }
-            }
-        }
-        let possibleLastMatch = matches[matches.length - 1];
-        if (
-            possibleLastMatch &&
-            possibleLastMatch.index &&
-            startSearchAt >= possibleLastMatch.index
-        ) {
-            nextMatch = 0;
-            wrapped = true;
-        }
-    }
+    // If we're searching backwards then the end of the search term is
+    // the relevant boundary so adjust the 'index' field to reflect that
+    if (args.direction == "backward")
+        matches.map(
+            (
+                //@ts-ignore
+                value: RegExpMatchArray,
+                index: number,
+                array: RegExpMatchArray[]
+                // @ts-ignore
+            ) => (array[index].index += searchFor.length)
+        );
 
-    if (args.direction === "backward") {
-        whichEnd = "bottom";
-        if (
-            startSearchAt >= -1 && // -1 b/c we move the cursor back one to look for prev match
-            matches &&
-            matches[0] &&
-            matches[0].index &&
-            startSearchAt <= matches[0].index + searchFor.length
-        ) {
-            nextMatch = matches.length - 1;
-            wrapped = true;
-        } else {
-            for (let i = matches.length - 2; i >= 0; i--) {
-                let possibleMatch = matches[i];
-                let possibleNextMatch = matches[i + 1];
-                if (
-                    possibleMatch &&
-                    possibleMatch.index &&
-                    startSearchAt >= possibleMatch.index + searchFor.length &&
-                    possibleNextMatch &&
-                    possibleNextMatch.index &&
-                    startSearchAt <= possibleNextMatch.index + +searchFor.length
-                ) {
-                    nextMatch = i;
-                    break;
-                }
-            }
-        }
-        let possibleLastMatch = matches[matches.length - 1];
-        if (
-            possibleLastMatch &&
-            possibleLastMatch.index &&
-            startSearchAt >= possibleLastMatch.index + searchFor.length
-        ) {
-            nextMatch = matches.length - 1;
-        }
-    }
+    // first match that's greater than the cursor/point is where we'll go if going forwards
+    const idxForwardsRaw = matches.findIndex(
+        (value: RegExpMatchArray) =>
+            value.index && value?.index >= startSearchAt
+    );
+    const idxForwards = idxForwardsRaw === -1 ? 0 : idxForwardsRaw;
+    const idxBackwards =
+        idxForwards === 0 ? matches.length - 1 : idxForwards - 1;
+
+    const wrapped =
+        (args.direction === "backward" && idxForwardsRaw === 0) ||
+        (args.direction === "forward" && idxForwardsRaw === -1);
+
+    const nextMatch = args.direction === "forward" ? idxForwards : idxBackwards;
+    const whichEnd = args.direction === "forward" ? "top" : "bottom";
 
     if (wrapped)
         vscode.window.showInformationMessage(
             "Wrapped search back to the " + whichEnd + " of file"
         );
 
-    const word_offset = matches[nextMatch].index ?? 0;
+    let word_offset = matches[nextMatch].index ?? 0;
+    if (args.direction === "backward") word_offset -= searchFor.length;
+
     const word_pos = document.positionAt(word_offset);
+
     const word_end_pos = document.positionAt(word_offset + searchFor.length);
 
     editor.selection = new Selection(word_pos, word_end_pos);
