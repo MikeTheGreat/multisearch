@@ -31,11 +31,17 @@ The JSON file should be set up similar to this:
             "name": "Project 2, Task 3",
             "abbrev": "2-3",
             "numQuestions": "N/A",
-            "searches": ["Heading", "SubHeading"]
+            "searches": ["Heading", "Sub.*Heading"]
         }
     ]
 }
 ```
+
+You can load the preset searches using `multisearch.loadPresetSearches` command - when prompted you can type in either the full name (exactly as written but case-INsensitive) or the abbrev(iation) (also exactly as written written but case IN-sensitive ).
+
+The individual search patterns can be regular expressions (e.g., "Sub.\*Heading").
+
+In the case of the preset for "Project 1, Task 1", above, the search term "allMdx" will be stored into slot zero ( 0 ), "results" into 1, and "return" into 2. You can then pass the slot as an argument to a command to search for whichever result you're interested in (keybinding examples are listed below)
 
 ### Keybinding examples
 

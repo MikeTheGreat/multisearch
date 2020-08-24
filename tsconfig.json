@@ -4,7 +4,8 @@
         "target": "es6",
         "outDir": "out",
         "sourceMap": true,
-        "rootDir": "src"
+        "rootDir": "src",
+        "lib": ["es2020.string"]
     },
     "exclude": ["node_modules", ".vscode-test", "src/test"]
 }

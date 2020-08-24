@@ -20,6 +20,7 @@ import * as vscode from "vscode";
 import { TextEditorEdit, TextEditor, Selection } from "vscode";
 import { resolveCliPathFromVSCodeExecutablePath } from "vscode-test";
 import { isUndefined } from "util";
+import { start } from "repl";
 
 // Keybindings:
 // https://code.visualstudio.com/api/references/contribution-points#contributes.keybindings
@@ -250,49 +251,75 @@ const doSearch = async (
     const searchFor = searches[args.which];
     // out.appendLine("Searching for: " + searchFor);
 
-    let word_offset_try: number = 0;
-    if (args.direction === "forward")
-        word_offset_try = documentText.indexOf(searchFor, startSearchAt);
-    else if (args.direction === "backward") {
-        word_offset_try = documentText.lastIndexOf(searchFor, startSearchAt);
+    const re = new RegExp(searchFor, "gi");
+    const matches = [...documentText.matchAll(re)];
 
-        // if the cursor was in the word while searching backwards we'll start
-        // by highlighting the word we're in.  Inconsistently the 'forwards'
-        // search when the cursor is in the word will NOT highlight the current word
-        // So if we're going backwards and the cursor is already on a match
-        // then re-search to find the one previous to the one we're on right now.
-        if (
-            word_offset_try <= startSearchAt &&
-            word_offset_try + searchFor.length >= startSearchAt
-        )
-            word_offset_try = documentText.lastIndexOf(
-                searchFor,
-                word_offset_try - 1
-            );
+    if (matches.length === 0) {
+        vscode.window.showInformationMessage("Word not found: " + searchFor);
+        return;
     }
 
-    if (word_offset_try == -1) {
-        let whichEnd: string = "top";
+    let nextMatch = -1;
+    let wrapped = false;
+    let whichEnd: string = "top";
 
-        if (args.direction === "forward") {
-            whichEnd = "top";
-            word_offset_try = documentText.indexOf(searchFor);
-        } else if (args.direction === "backward") {
-            whichEnd = "bottom";
-            word_offset_try = documentText.lastIndexOf(searchFor);
+    // These two cases are _so_similar_ - I feel like we ought to be able
+    // to refactor them into common code
+    // But I think the resulting code will be more complex than just keeping them
+    // separate
+    if (args.direction === "forward") {
+        if (startSearchAt >= 0 && startSearchAt <= matches[0].index)
+            nextMatch = 0;
+        else {
+            for (let i = 0; i < matches.length - 1; i++) {
+                if (
+                    startSearchAt >= matches[i].index &&
+                    startSearchAt <= matches[i + 1].index
+                ) {
+                    nextMatch = i + 1;
+                    break;
+                }
+            }
         }
-        // search from start of file (offset 0)
-        if (word_offset_try == -1) {
-            vscode.window.showInformationMessage(
-                "Word not found: " + searchFor
-            );
-            return;
-        } else
-            vscode.window.showInformationMessage(
-                "Wrapped search back to " + whichEnd + " of file"
-            );
+        if (startSearchAt >= matches[matches.length - 1].index) {
+            nextMatch = 0;
+            wrapped = true;
+        }
     }
-    const word_offset = word_offset_try;
+
+    if (args.direction === "backward") {
+        whichEnd = "bottom";
+        if (
+            startSearchAt >= -1 && // -1 b/c we move the cursor back one to look for prev match
+            startSearchAt <= matches[0].index + searchFor.length
+        ) {
+            nextMatch = matches.length - 1;
+            wrapped = true;
+        } else {
+            for (let i = matches.length - 2; i >= 0; i--) {
+                if (
+                    startSearchAt >= matches[i].index + searchFor.length &&
+                    startSearchAt <= matches[i + 1].index + +searchFor.length
+                ) {
+                    nextMatch = i;
+                    break;
+                }
+            }
+        }
+        if (
+            startSearchAt >=
+            matches[matches.length - 1].index + searchFor.length
+        ) {
+            nextMatch = matches.length - 1;
+        }
+    }
+
+    if (wrapped)
+        vscode.window.showInformationMessage(
+            "Wrapped search back to the " + whichEnd + " of file"
+        );
+
+    const word_offset = matches[nextMatch].index;
     const word_pos = document.positionAt(word_offset);
     const word_end_pos = document.positionAt(word_offset + searchFor.length);
 
