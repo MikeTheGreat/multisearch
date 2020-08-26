@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.executeCommand(
         "setContext",
-        "multisearch.rebindKeys",
+        "multisearch.searchMode",
         true
     );
 
@@ -77,18 +77,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 
     disposable = vscode.commands.registerTextEditorCommand(
-        "multisearch.doSearch",
-        doSearch
-    );
-    context.subscriptions.push(disposable);
-
-    disposable = vscode.commands.registerTextEditorCommand(
-        "multisearch.SearchForwards",
-        doSearch
-    );
-    context.subscriptions.push(disposable);
-
-    disposable = vscode.commands.registerTextEditorCommand(
         "multisearch.searchModeOn",
         searchModeOn
     );
@@ -97,6 +85,36 @@ export function activate(context: vscode.ExtensionContext) {
     disposable = vscode.commands.registerTextEditorCommand(
         "multisearch.searchModeOff",
         searchModeOff
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.doSearch",
+        doSearch
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.SearchForward",
+        doSearchForward
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.SearchBackward",
+        doSearchBackward
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.AcquireThenSearchForward",
+        doAquireThenSearchForward
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.AcquireThenSearchBackward",
+        doAquireThenSearchBackward
     );
     context.subscriptions.push(disposable);
 }
@@ -298,8 +316,6 @@ const doSearch = async (
         return;
     }
 
-    debugger;
-
     // If we're searching backwards then the end of the search term is
     // the relevant boundary so adjust the 'index' field to reflect that
     if (args.direction == "backward")
@@ -350,11 +366,50 @@ const doSearch = async (
     // out.appendLine("END OF MULTISEARCH.doSearch");
 };
 
+// Convenience functions to aid in UI discoverability:
+const doSearchForward = async (
+    textEditor: TextEditor,
+    edit: TextEditorEdit,
+    args: ISearchArgs
+) => {
+    args.direction = "forward";
+    return doSearch(textEditor, edit, args);
+};
+
+const doAquireThenSearchForward = async (
+    textEditor: TextEditor,
+    edit: TextEditorEdit,
+    args: ISearchArgs
+) => {
+    args.direction = "forward";
+    args.acquire = true;
+    return doSearch(textEditor, edit, args);
+};
+
+const doSearchBackward = async (
+    textEditor: TextEditor,
+    edit: TextEditorEdit,
+    args: ISearchArgs
+) => {
+    args.direction = "backward";
+    return doSearch(textEditor, edit, args);
+};
+
+const doAquireThenSearchBackward = async (
+    textEditor: TextEditor,
+    edit: TextEditorEdit,
+    args: ISearchArgs
+) => {
+    args.direction = "backward";
+    args.acquire = true;
+    return doSearch(textEditor, edit, args);
+};
+
 const searchModeOn = async () => {
     // out.appendLine("In doSearch!");
     vscode.commands.executeCommand(
         "setContext",
-        "multisearch.rebindKeys",
+        "multisearch.searchMode",
         true
     );
     vscode.window.showInformationMessage("Search mode is ON");
@@ -364,7 +419,7 @@ const searchModeOff = async () => {
     // out.appendLine("In doSearch!");
     vscode.commands.executeCommand(
         "setContext",
-        "multisearch.rebindKeys",
+        "multisearch.searchMode",
         false
     );
     vscode.window.showInformationMessage("Search mode is OFF");
