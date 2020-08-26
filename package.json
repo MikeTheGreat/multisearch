@@ -2,7 +2,7 @@
     "name": "multisearch",
     "displayName": "Multisearch",
     "description": "Extending the 'F3' seach functionality to additional keys (F4, F5, etc)",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "publisher": "MikePanitz",
     "repository": {
         "url": "https://github.com/MikeTheGreat/multisearch"
@@ -16,7 +16,9 @@
     ],
     "activationEvents": [
         "onCommand:multisearch.loadPresetSearches",
-        "onCommand:multisearch.doSearch"
+        "onCommand:multisearch.doSearch",
+        "onCommand:multisearch.searchModeOn",
+        "onCommand:multisearch.searchModeOff"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -24,8 +26,17 @@
             {
                 "command": "multisearch.loadPresetSearches",
                 "title": "Load Preset Searches",
-                "category": "MultiSearch",
-                "when": "editorFocus"
+                "category": "MultiSearch"
+            },
+            {
+                "command": "multisearch.searchModeOn",
+                "title": "Search Mode On",
+                "category": "MultiSearch"
+            },
+            {
+                "command": "multisearch.searchModeOff",
+                "title": "Search Mode Off",
+                "category": "MultiSearch"
             },
             {
                 "command": "multisearch.doSearch",
@@ -34,42 +45,7 @@
                 "when": "editorFocus"
             }
         ],
-        "keybindings": [
-            {
-                "command": "multisearch.doSearch",
-                "key": "f3",
-                "args": {
-                    "which": 0,
-                    "direction": "forward"
-                }
-            },
-            {
-                "command": "multisearch.doSearch",
-                "key": "Shift+f3",
-                "args": {
-                    "which": 0,
-                    "direction": "backward"
-                }
-            },
-            {
-                "command": "multisearch.doSearch",
-                "key": "Ctrl+f3",
-                "args": {
-                    "acquire": true,
-                    "which": 0,
-                    "direction": "forward"
-                }
-            },
-            {
-                "command": "multisearch.doSearch",
-                "key": "Ctrl+Shift+f3",
-                "args": {
-                    "acquire": true,
-                    "which": 0,
-                    "direction": "backward"
-                }
-            }
-        ],
+        "keybindings": [],
         "configuration": {
             "title": "MultiSearch",
             "properties": {

@@ -45,7 +45,19 @@ In the case of the preset for "Project 1, Task 1", above, the search term "allMd
 
 ### Keybinding examples
 
-You'll probably want to bind more keys to search for stuff. I took the liberty of replacing the F3 searches already, but if you wanted to load the preset file with Ctrl+F1 and then change F4 to behave similarly to F3 you could put the following into your `keybinding.json` file ([which you can open by following the advice on this page](https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization)):
+This extension doesn't replace any keybindings 'out of the box'; you'll probably want to bind keys to search for stuff.
+You probably also want to replace a bunch of keys with search functions to search for stuff, and then set them back to their 'normal' functions after.
+The following example config can be added to your `keybinding.json` file ([which you can open by following the advice on this page](https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization)), so that the following keybindings are in effect:
+
+-   Ctrl+F1: Load the preset file with and then choose which preset to use
+-   Ctrl+Shift+f1: Toggle search mode on (this sets multisearch.rebindkeys to be true) and off so that all the numerous other keybindings take effect (or don't take effect)
+
+-   f2 : Search forwards
+-   Shift+f2: Search backwards
+-   Ctrl+f2: Search forwards for whatever the current selection is (if no selection, then for the word at the cursor)
+-   Ctrl+Shift+f2: Search backwards for whatever the current selection is (if no selection, then for the word at the cursor)
+
+f2 uses slot 0 in the multisearch array, f3 uses slot 1, f4 uses 2, and f5 uses 3
 
 ```json
 [
@@ -53,40 +65,54 @@ You'll probably want to bind more keys to search for stuff. I took the liberty o
         "key": "Ctrl+f1",
         "command": "multisearch.loadPresetSearches"
     },
-    {
-        "key": "f4",
-        "command": "multisearch.doSearch",
-        "args": {
-            "which": 1, // Search for the search term in slot 1 of the searches array
-            "direction": "forward" // search from the top of the file towards the bottom, wrapping if needed
-        }
+    {m
+        "key": "Ctrl+Shift+f1",
+        "command": "multisearch.searchModeOn",
+        "when": "multisearch.rebindKeys == false"
     },
     {
-        "key": "Shift+f4",
+        "key": "Ctrl+Shift+f1",
+        "command": "multisearch.searchModeOff",
+        "when": "multisearch.rebindKeys == true"
+    },
+    // When search mode is active, take over a whole bunch of keys:
+    {
+        "key": "f2",
         "command": "multisearch.doSearch",
         "args": {
-            "which": 1,
+            "which": 0,
+            "direction": "forward"
+        },
+        "when": "multisearch.rebindKeys == true"
+    },
+    {
+        "key": "Shift+f2",
+        "command": "multisearch.doSearch",
+        "args": {
+            "which": 0,
             "direction": "backward"
-        }
+        },
+        "when": "multisearch.rebindKeys == true"
     },
     {
-        "key": "Ctrl+f4",
+        "key": "Ctrl+f2",
         "command": "multisearch.doSearch",
         "args": {
             "acquire": true,
-            "which": 1,
+            "which": 0,
             "direction": "forward"
-        }
+        },
+        "when": "multisearch.rebindKeys == true"
     },
     {
-        "key": "Ctrl+Shift+f4",
+        "key": "Ctrl+Shift+f2",
         "command": "multisearch.doSearch",
         "args": {
-            "acquire": true, // search for the word under the cursor, replacing this slot
-            "which": 1, // store the word into slot 1 (it's a JS array, so you can use as many slots as you want)
-            // (by default the extension binds F3 to slot 0)
-            "direction": "backward" // search from the bottom of the file towards the top, wrapping if needed
-        }
+            "acquire": true,
+            "which": 0,
+            "direction": "backward"
+        },
+        "when": "multisearch.rebindKeys == true"
     }
 ]
 ```

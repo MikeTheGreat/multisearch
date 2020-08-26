@@ -54,7 +54,13 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     // out.show();
 
-    let config = vscode.workspace.getConfiguration("multisearch");
+    vscode.commands.executeCommand(
+        "setContext",
+        "multisearch.rebindKeys",
+        true
+    );
+
+    //let config = vscode.workspace.getConfiguration("multisearch");
     // out.appendLine(
     //     "File containing search string presets: " +
     //         config.get("fileOfSearchStrings")
@@ -73,6 +79,24 @@ export function activate(context: vscode.ExtensionContext) {
     disposable = vscode.commands.registerTextEditorCommand(
         "multisearch.doSearch",
         doSearch
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.SearchForwards",
+        doSearch
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.searchModeOn",
+        searchModeOn
+    );
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerTextEditorCommand(
+        "multisearch.searchModeOff",
+        searchModeOff
     );
     context.subscriptions.push(disposable);
 }
@@ -165,6 +189,9 @@ const loadPreset = async () => {
             return;
         }
     );
+
+    // activate search mode, too
+    searchModeOn();
 };
 
 const doSearch = async (
@@ -322,4 +349,24 @@ const doSearch = async (
     );
 
     // out.appendLine("END OF MULTISEARCH.doSearch");
+};
+
+const searchModeOn = async () => {
+    // out.appendLine("In doSearch!");
+    vscode.commands.executeCommand(
+        "setContext",
+        "multisearch.rebindKeys",
+        true
+    );
+    vscode.window.showInformationMessage("Search mode is ON");
+};
+
+const searchModeOff = async () => {
+    // out.appendLine("In doSearch!");
+    vscode.commands.executeCommand(
+        "setContext",
+        "multisearch.rebindKeys",
+        false
+    );
+    vscode.window.showInformationMessage("Search mode is OFF");
 };
