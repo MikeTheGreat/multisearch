@@ -24,13 +24,13 @@ The JSON file should be set up similar to this:
         {
             "name": "Project 1, Task 1",
             "abbrev": "1-1",
-            "numQuestions": "N/A",
+            "msgWhenLoaded": "Don't forget to do A, B, C",
             "searches": ["allMdx", "results", "return"]
         },
         {
             "name": "Project 2, Task 3",
             "abbrev": "2-3",
-            "numQuestions": "N/A",
+            "msgWhenLoaded": "Don't forget to do X, Y, Z",
             "searches": ["Heading", "Sub.*Heading"]
         }
     ]

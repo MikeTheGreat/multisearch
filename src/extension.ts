@@ -35,7 +35,7 @@ interface IPresetCollection {
 interface IPreset {
     name: string;
     abbrev: string;
-    numQuestions: string;
+    msgWhenLoaded: string;
     searches: Array<string>;
 }
 
@@ -167,8 +167,7 @@ const loadPreset = async () => {
             searches = match.searches;
 
             let msg = "Loaded " + match.name;
-            if (match.numQuestions)
-                msg += "  *  Quiz questions: " + match.numQuestions;
+            if (match.msgWhenLoaded) msg += match.msgWhenLoaded;
             msg += "  * From " + fpSearchStrings;
 
             vscode.window.showInformationMessage(msg);

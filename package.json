@@ -2,7 +2,7 @@
     "name": "multisearch",
     "displayName": "Multisearch",
     "description": "Extending the 'F3' seach functionality to additional keys (F4, F5, etc)",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "publisher": "MikePanitz",
     "repository": {
         "url": "https://github.com/MikeTheGreat/multisearch"
